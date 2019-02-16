@@ -8,8 +8,6 @@
 
 import Foundation
 import UIKit
-
-
 class workoutCalendarViewController: UIViewController,UITableViewDelegate,UITableViewDataSource,UICollectionViewDataSource,UICollectionViewDelegate{
     //组件
     @IBOutlet weak var workoutTableView: UITableView!
@@ -22,8 +20,10 @@ class workoutCalendarViewController: UIViewController,UITableViewDelegate,UITabl
         workoutCalendarView.reloadData()
     }
     //数据
+    let (startYear,startMonth) = (2019,2)
+    let (endYear,endMonth) = (2019,6)
     let calendar = Calendar.current
-    var monthSet:[YearMonth]  = [YearMonth(),YearMonth().nextMonth()]
+    var monthSet:[YearMonth]  = []
     //@deprecated
     var workoutData = [DailyWorkout]()
     var workoutDay = DailyWorkout.init(date: Date.init(), workouts: nil)
@@ -35,7 +35,9 @@ class workoutCalendarViewController: UIViewController,UITableViewDelegate,UITabl
         workoutCalendarView.dataSource = self
         workoutCalendarView.delegate = self
         flowLayout.sectionHeadersPinToVisibleBounds = true
-        //
+        //加载数据
+        monthSet = range(startYear: startYear, startMonth: startMonth, endYear: endYear, endMonth: endMonth)
+        
     }
     //日历CollectionView
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -173,4 +175,16 @@ class YearMonth{
         let nM = month==12 ? 1:month+1
         return YearMonth.init(Year: nY, Month: nM)
     }
+}
+func range(startYear:Int,startMonth:Int,endYear:Int,endMonth:Int)->[YearMonth]{
+    var iY = startYear
+    var iM = startMonth
+    var range:[YearMonth] = []
+    while (iY,iM) != (endYear,endMonth) {
+        range.append(YearMonth.init(Year: iY, Month: iM))
+        iY = iM>11 ? iY+1:iY
+        iM = iM>11 ? 1:iM+1
+    }
+    range.append(YearMonth.init(Year: endYear, Month: endMonth))
+    return range
 }
