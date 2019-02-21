@@ -12,6 +12,37 @@ enum WorkoutType{
     case Running
     case SitUp
 }
+enum Weekday:Int{
+    case Sunday = 1
+    case Monday = 2
+    case Tuesday = 3
+    case Wednesday = 4
+    case Thursday = 5
+    case Friday = 6
+    case Saturday = 7
+    var short:String{
+        get{
+            var str = ""
+            switch self {
+            case .Sunday:
+                str = "Sun"
+            case .Monday:
+                str = "Mon"
+            case .Tuesday:
+                str = "Tue"
+            case .Wednesday:
+                str = "Wed"
+            case .Thursday:
+                str = "Thur"
+            case .Friday:
+                str = "Fri"
+            case .Saturday:
+                str = "Sat"
+            }
+            return str
+        }
+    }
+}
 class Workout {
     var startTime:Date
     var endTime:Date
@@ -60,5 +91,31 @@ class DailyWorkout{
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy年MM月dd日"
         return dateFormatter.string(from: workoutDate)
+    }
+}
+class Actions{
+    var actionTitle = "Action"
+    init() {
+        
+    }
+}
+class Plan{
+    var weekday:Weekday = Weekday.Sunday//using the enum type of weekday in calendar
+    var title = "Trainning Plan"
+    var group = 7
+    var num = 15
+    var archievs:[Date] = []
+    var actionsInPlan:[Actions] = []
+    init(title:String,groups:Int,nums:Int,weekday:Weekday) {
+        self.title = title
+        self.group = groups
+        self.num = nums
+        self.weekday = weekday
+    }
+    func addAch(date:Date){
+        archievs.append(date)
+    }
+    func addAction(action:[Actions]){
+        actionsInPlan.append(contentsOf: action)
     }
 }

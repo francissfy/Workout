@@ -24,6 +24,7 @@ class workoutCalendarViewController: UIViewController,UITableViewDelegate,UITabl
     let (endYear,endMonth) = (2019,6)
     let calendar = Calendar.current
     var monthSet:[YearMonth]  = []
+    var collectionSize = CGSize.init(width: 343, height: 296)
     //@deprecated
     var workoutData = [DailyWorkout]()
     var workoutDay = DailyWorkout.init(date: Date.init(), workouts: nil)
@@ -34,10 +35,11 @@ class workoutCalendarViewController: UIViewController,UITableViewDelegate,UITabl
         //workoutTableView.dataSource = self
         workoutCalendarView.dataSource = self
         workoutCalendarView.delegate = self
-        flowLayout.sectionHeadersPinToVisibleBounds = true
         //加载数据
         monthSet = range(startYear: startYear, startMonth: startMonth, endYear: endYear, endMonth: endMonth)
-        
+        //Flow layout configure
+        flowLayout.sectionHeadersPinToVisibleBounds = true
+        //
     }
     //日历CollectionView
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -73,7 +75,11 @@ class workoutCalendarViewController: UIViewController,UITableViewDelegate,UITabl
         }
         return collectionCell as UICollectionViewCell
     }
+    //可更改
     func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         return true
     }
     //增加月份
