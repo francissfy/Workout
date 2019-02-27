@@ -1,4 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <elements/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14460.32" systemVersion="17G65" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Actions" representedClassName="Actions" syncable="YES" codeGenerationType="class">
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="note" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="specified" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="SpecifiedActions" inverseName="action" inverseEntity="SpecifiedActions" syncable="YES"/>
+    </entity>
+    <entity name="PlanArch" representedClassName="PlanArch" syncable="YES" codeGenerationType="class">
+        <attribute name="archDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
+        <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Plans" inverseName="arch" inverseEntity="Plans" syncable="YES"/>
+    </entity>
+    <entity name="Plans" representedClassName="Plans" syncable="YES" codeGenerationType="class">
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="weekday" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <relationship name="arch" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="PlanArch" inverseName="plan" inverseEntity="PlanArch" syncable="YES"/>
+        <relationship name="specifiedaction" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="SpecifiedActions" inverseName="plan" inverseEntity="SpecifiedActions" syncable="YES"/>
+    </entity>
+    <entity name="SpecifiedActions" representedClassName="SpecifiedActions" syncable="YES" codeGenerationType="class">
+        <attribute name="group" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="num" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <relationship name="action" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Actions" inverseName="specified" inverseEntity="Actions" syncable="YES"/>
+        <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Plans" inverseName="specifiedaction" inverseEntity="Plans" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Actions" positionX="23.2421875" positionY="105.27734375" width="128" height="90"/>
+        <element name="PlanArch" positionX="-331.18359375" positionY="-3.3359375" width="128" height="75"/>
+        <element name="Plans" positionX="-542.359375" positionY="99.40625" width="128" height="105"/>
+        <element name="SpecifiedActions" positionX="-198" positionY="126" width="128" height="105"/>
+    </elements>
 </model>

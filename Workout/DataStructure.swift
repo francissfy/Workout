@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreData
 enum WorkoutType{
     case PushUp
     case Running
@@ -42,6 +43,52 @@ enum Weekday:Int{
             return str
         }
     }
+    var fullString:String{
+        get{
+            var str = ""
+            switch self {
+            case .Sunday:
+                str = "Sunday"
+            case .Monday:
+                str = "Monday"
+            case .Tuesday:
+                str = "Tuesday"
+            case .Wednesday:
+                str = "Wednesday"
+            case .Thursday:
+                str = "Thursday"
+            case .Friday:
+                str = "Friday"
+            case .Saturday:
+                str = "Saturday"
+            }
+            return str
+        }
+    }
+}
+func convertToWeekday(wd:Int)->Weekday{
+    switch wd {
+    case 1:
+        return Weekday.Sunday
+    case 2:
+        return Weekday.Monday
+    case 3:
+        return Weekday.Tuesday
+    case 4:
+        return Weekday.Wednesday
+    case 5:
+        return Weekday.Thursday
+    case 6:
+        return Weekday.Friday
+    case 7:
+        return Weekday.Saturday
+    default:
+        return Weekday.Monday
+    }
+}
+class cachePlanAndActions{
+    static var cachedPlans:[Plans] = []
+    static var cachedActions:[Actions] = []
 }
 class Workout {
     var startTime:Date
@@ -93,10 +140,22 @@ class DailyWorkout{
         return dateFormatter.string(from: workoutDate)
     }
 }
-class Actions{
-    var actionTitle = "Action"
-    init() {
-        
+class SpecifiedAction{
+    var action:Action
+    var group:Int
+    var num:Int
+    init(action:Action,group:Int,num:Int) {
+        self.action = action
+        self.group = group
+        self.num = num
+    }
+}
+class Action{
+    var name :String
+    var note:String?
+    init(name:String,note:String?) {
+        self.name = name
+        self.note = note
     }
 }
 class Plan{
@@ -105,7 +164,7 @@ class Plan{
     var group = 7
     var num = 15
     var archievs:[Date] = []
-    var actionsInPlan:[Actions] = []
+    var actionsInPlan:[SpecifiedAction] = []
     init(title:String,groups:Int,nums:Int,weekday:Weekday) {
         self.title = title
         self.group = groups
@@ -115,7 +174,7 @@ class Plan{
     func addAch(date:Date){
         archievs.append(date)
     }
-    func addAction(action:[Actions]){
+    func addAction(action:[SpecifiedAction]){
         actionsInPlan.append(contentsOf: action)
     }
 }
