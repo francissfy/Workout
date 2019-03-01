@@ -2,7 +2,7 @@
 //  Plans+CoreDataProperties.swift
 //  
 //
-//  Created by francis on 2019/2/25.
+//  Created by francis on 2019/2/28.
 //
 //
 
@@ -18,25 +18,8 @@ extension Plans {
 
     @NSManaged public var name: String?
     @NSManaged public var weekday: Int64
-    @NSManaged public var actions: NSSet?
     @NSManaged public var arch: NSSet?
-
-}
-
-// MARK: Generated accessors for actions
-extension Plans {
-
-    @objc(addActionsObject:)
-    @NSManaged public func addToActions(_ value: Actions)
-
-    @objc(removeActionsObject:)
-    @NSManaged public func removeFromActions(_ value: Actions)
-
-    @objc(addActions:)
-    @NSManaged public func addToActions(_ values: NSSet)
-
-    @objc(removeActions:)
-    @NSManaged public func removeFromActions(_ values: NSSet)
+    @NSManaged public var specifiedaction: NSSet?
 
 }
 
@@ -54,5 +37,22 @@ extension Plans {
 
     @objc(removeArch:)
     @NSManaged public func removeFromArch(_ values: NSSet)
+
+}
+
+// MARK: Generated accessors for specifiedaction
+extension Plans {
+
+    @objc(addSpecifiedactionObject:)
+    @NSManaged public func addToSpecifiedaction(_ value: SpecifiedActions)
+
+    @objc(removeSpecifiedactionObject:)
+    @NSManaged public func removeFromSpecifiedaction(_ value: SpecifiedActions)
+
+    @objc(addSpecifiedaction:)
+    @NSManaged public func addToSpecifiedaction(_ values: NSSet)
+
+    @objc(removeSpecifiedaction:)
+    @NSManaged public func removeFromSpecifiedaction(_ values: NSSet)
 
 }

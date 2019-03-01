@@ -11,10 +11,31 @@ import UIKit
 import CoreData
 class AllActions: UIViewController,UITableViewDelegate,UITableViewDataSource {
     //控件
-    @IBAction func edit(_ sender: Any) {
+    
+    @IBAction func backAndCancel(_ sender: UIBarButtonItem) {
+        if(allActionTableView.isEditing){
+            sender.title = "Back"
+            editAndAddBtn.title = "Edit"
+            allActionTableView.setEditing(false, animated: true)
+        }else{
+            self.dismiss(animated: true, completion: nil)
+        }
     }
-    @IBAction func add(_ sender: Any) {
+    @IBOutlet weak var backAndCancelBtn: UIBarButtonItem!
+    @IBOutlet weak var editAndAddBtn: UIBarButtonItem!
+    @IBAction func editAndAdd(_ sender: UIBarButtonItem) {
+        if(allActionTableView.isEditing){
+            sender.title = "Edit"
+            backAndCancelBtn.title = "Back"
+            allActionTableView.setEditing(false, animated: true)
+            performSegue(withIdentifier: "addActionSegue", sender: self)
+        }else{
+            sender.title = "Add"
+            backAndCancelBtn.title = "Cancel"
+            allActionTableView.setEditing(true, animated: true)
+        }
     }
+    
     @IBOutlet weak var allActionTableView: UITableView!
     
     //变量
@@ -39,30 +60,29 @@ class AllActions: UIViewController,UITableViewDelegate,UITableViewDataSource {
         print(allAction[indexPath.row].name)
         return cell
     }
-    //fetching, caching and reloading view
-    //@deprecated
-//    func fetchAllAction(){
-//        let fetchingAlert = UIAlertController.init(title: "Fetching", message: nil, preferredStyle: UIAlertController.Style.alert)
-//        let fetchRequest = NSFetchRequest<Actions>.init(entityName: "Actions")
-//        fetchRequest.predicate = nil
-//        let ctx = getPrivateQueueMOCtx()
-//        let asyncFetch = NSAsynchronousFetchRequest.init(fetchRequest: fetchRequest) { (result:NSAsynchronousFetchResult<Actions>) in
-//            let res = result.finalResult!
-//            self.allAction.removeAll()
-//            for item in res{
-//                let action = Action.init(name: item.name!, note: item.note)
-//                self.allAction.append(action)
-//            }
-//            fetchingAlert.dismiss(animated: true, completion:nil)
-//            DispatchQueue.main.async {
-//                self.allActionTableView.reloadData()
-//            }
-//        }
-//        ctx.performAndWait {
-//            do{try ctx.execute(asyncFetch)}catch{fatalError(error.localizedDescription)}
-//        }
-//    }
-    //
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if(editingStyle == UITableViewCell.EditingStyle.delete){
+            let toDelete = allAction[indexPath.row]
+            allAction.remove(at: indexPath.row)
+            tableView.reloadData()
+            let coordinator = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.persistentStoreCoordinator
+            DispatchQueue.global().async {
+                let ctx = NSManagedObjectContext.init(concurrencyType: NSManagedObjectContextConcurrencyType.privateQueueConcurrencyType)
+                ctx.persistentStoreCoordinator = coordinator
+                let fetchRequest = NSFetchRequest<Actions>.init(entityName: "Actions")
+                fetchRequest.predicate = NSPredicate.init(format: "name = %@", argumentArray: [toDelete.name])
+                let asyncFetch = NSAsynchronousFetchRequest.init(fetchRequest: fetchRequest, completionBlock: { (result:NSAsynchronousFetchResult<Actions>) in
+                    let toDeleteActions = result.finalResult!
+                    for item in toDeleteActions{
+                        ctx.delete(item)
+                    }
+                    do{try ctx.save()}catch{fatalError(error.localizedDescription)}
+                })
+                do{try ctx.execute(asyncFetch)}catch{fatalError(error.localizedDescription)}
+            }
+            
+        }
+    }
     func refreshingData(){
         let asyncQueue = DispatchQueue.global()
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
@@ -75,7 +95,7 @@ class AllActions: UIViewController,UITableViewDelegate,UITableViewDataSource {
                 let allAcs = result.finalResult!
                 self.allAction.removeAll()
                 for item in allAcs{
-                    let newAction = Action.init(name: item.name!, note: item.note)
+                    let newAction = Action.init(name: item.name!, note: item.note!)
                     self.allAction.append(newAction)
                 }
                 DispatchQueue.main.async {

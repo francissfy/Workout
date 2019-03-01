@@ -144,6 +144,7 @@ class SpecifiedAction{
     var action:Action
     var group:Int
     var num:Int
+    var objectIDinCoreData:NSManagedObjectID?
     init(action:Action,group:Int,num:Int) {
         self.action = action
         self.group = group
@@ -152,23 +153,21 @@ class SpecifiedAction{
 }
 class Action{
     var name :String
-    var note:String?
-    init(name:String,note:String?) {
+    var note:String
+    var objectIDinCoreData:NSManagedObjectID?
+    init(name:String,note:String) {
         self.name = name
         self.note = note
     }
 }
 class Plan{
     var weekday:Weekday = Weekday.Sunday//using the enum type of weekday in calendar
-    var title = "Trainning Plan"
-    var group = 7
-    var num = 15
+    var title = "Default Plan Name"
     var archievs:[Date] = []
     var actionsInPlan:[SpecifiedAction] = []
-    init(title:String,groups:Int,nums:Int,weekday:Weekday) {
+    var objectIDinCoreData:NSManagedObjectID?
+    init(title:String,weekday:Weekday) {
         self.title = title
-        self.group = groups
-        self.num = nums
         self.weekday = weekday
     }
     func addAch(date:Date){

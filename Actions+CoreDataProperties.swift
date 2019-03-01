@@ -2,7 +2,7 @@
 //  Actions+CoreDataProperties.swift
 //  
 //
-//  Created by francis on 2019/2/25.
+//  Created by francis on 2019/2/28.
 //
 //
 
@@ -16,27 +16,25 @@ extension Actions {
         return NSFetchRequest<Actions>(entityName: "Actions")
     }
 
-    @NSManaged public var group: Int64
     @NSManaged public var name: String?
     @NSManaged public var note: String?
-    @NSManaged public var num: Int64
-    @NSManaged public var plan: NSSet?
+    @NSManaged public var specified: NSSet?
 
 }
 
-// MARK: Generated accessors for plan
+// MARK: Generated accessors for specified
 extension Actions {
 
-    @objc(addPlanObject:)
-    @NSManaged public func addToPlan(_ value: Plans)
+    @objc(addSpecifiedObject:)
+    @NSManaged public func addToSpecified(_ value: SpecifiedActions)
 
-    @objc(removePlanObject:)
-    @NSManaged public func removeFromPlan(_ value: Plans)
+    @objc(removeSpecifiedObject:)
+    @NSManaged public func removeFromSpecified(_ value: SpecifiedActions)
 
-    @objc(addPlan:)
-    @NSManaged public func addToPlan(_ values: NSSet)
+    @objc(addSpecified:)
+    @NSManaged public func addToSpecified(_ values: NSSet)
 
-    @objc(removePlan:)
-    @NSManaged public func removeFromPlan(_ values: NSSet)
+    @objc(removeSpecified:)
+    @NSManaged public func removeFromSpecified(_ values: NSSet)
 
 }

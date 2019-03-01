@@ -8,11 +8,21 @@
 
 import Foundation
 import UIKit
+import CoreData
 class AddPlan:UIViewController,UIPickerViewDelegate,UIPickerViewDataSource,UITextFieldDelegate,UITableViewDelegate,UITableViewDataSource{
     //控件
     @IBOutlet weak var groupNumPicker: UIPickerView!
     @IBOutlet weak var actionTableView: UITableView!
     @IBOutlet weak var planName: UITextField!
+    @IBAction func cancel(_ sender: Any) {
+        self.dismiss(animated: true, completion: nil)
+    }
+    @IBAction func done(_ sender: Any) {
+        savingPlan(toSave: newPlan)
+    }
+    
+    
+    
     @IBAction func editActionTable(_ sender: UIButton) {
         if(actionTableView.isEditing == true){
             sender.setTitle("Edit", for: UIControl.State.normal)
@@ -22,20 +32,11 @@ class AddPlan:UIViewController,UIPickerViewDelegate,UIPickerViewDataSource,UITex
             sender.setTitle("Done", for: UIControl.State.normal)
         }
     }
-    @IBAction func addActionToPlan(_ sender: UIButton) {
-        //test
-        let action = Action.init(name: "Hellp", note: "BR")
-        let speActions = [SpecifiedAction.init(action: action, group: 4, num: 12)]
-        newPlan.addAction(action: speActions)
-        actionTableView.reloadData()
-    }
     @IBOutlet weak var actionFreqLabel: UILabel!
-    @IBAction func weekdayButton(_ sender: UIButton) {
-        showWeekdayActionSheet()
-    }
-    @IBOutlet weak var weekdayLabel: UIButton!
+    @IBOutlet weak var weekdayLabel: UILabel!
+    
     //变量
-    var newPlan = Plan.init(title: "default", groups: 7, nums: 15, weekday: Weekday.Monday)
+    var newPlan = Plan.init(title: "Default",weekday: Weekday.Monday)
     //ViewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,19 +49,56 @@ class AddPlan:UIViewController,UIPickerViewDelegate,UIPickerViewDataSource,UITex
         planName.delegate = self
         actionTableView.dataSource = self
         actionTableView.delegate = self
+        weekdayLabel.isUserInteractionEnabled = true
+        let gesRecog = UITapGestureRecognizer.init(target: self, action: #selector(showWeekdayActionSheet))
+        weekdayLabel.addGestureRecognizer(gesRecog)
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        
+    }
+    //saving plan
+    func savingPlan(toSave:Plan){
+        let fetchingSavingAlert = UIAlertController.init(title: "Saving Plan", message: nil, preferredStyle: UIAlertController.Style.alert)
+        let coordinator = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.persistentStoreCoordinator
+        DispatchQueue.global().async {
+            DispatchQueue.main.async {
+                self.present(fetchingSavingAlert, animated: true, completion: nil)
+            }
+            let ctx = NSManagedObjectContext.init(concurrencyType: NSManagedObjectContextConcurrencyType.privateQueueConcurrencyType)
+            ctx.persistentStoreCoordinator = coordinator
+            let planEntityDescription = NSEntityDescription.entity(forEntityName: "Plans", in: ctx)!
+            let newMPlan = NSManagedObject.init(entity: planEntityDescription, insertInto: ctx) as! Plans
+            let specifiedActionEntityDescription = NSEntityDescription.entity(forEntityName: "SpecifiedActions", in: ctx)!
+            for specAction in toSave.actionsInPlan{
+                let managedAction = ctx.object(with: specAction.action.objectIDinCoreData!) as! Actions
+                let managedSpecifiedAction = NSManagedObject.init(entity: specifiedActionEntityDescription, insertInto: ctx) as! SpecifiedActions
+                managedSpecifiedAction.action = managedAction
+                managedSpecifiedAction.group = Int64(specAction.group)
+                managedSpecifiedAction.num = Int64(specAction.num)
+                newMPlan.addToSpecifiedaction(managedSpecifiedAction)
+            }
+            newMPlan.arch = NSSet.init()
+            newMPlan.name = self.newPlan.title
+            newMPlan.weekday = Int64(self.newPlan.weekday.rawValue)
+            do{try ctx.save()}catch{fatalError(error.localizedDescription)}
+            DispatchQueue.main.async {
+                fetchingSavingAlert.dismiss(animated: true, completion: nil)
+            }
+        }
     }
     //Alert
-    func showWeekdayActionSheet(){
+    @objc func showWeekdayActionSheet(){
         let weekdaySelectActionSheet = UIAlertController.init(title: "Weekday", message: nil, preferredStyle: UIAlertController.Style.actionSheet)
         for i in 1...7{
             let newAction = UIAlertAction.init(title: convertToWeekday(wd: i).fullString, style: UIAlertAction.Style.default) { (action:UIAlertAction) in
                 self.newPlan.weekday = convertToWeekday(wd: i)
-                self.weekdayLabel.titleLabel?.text = self.newPlan.weekday.fullString
+                self.weekdayLabel.text = self.newPlan.weekday.fullString
             }
             weekdaySelectActionSheet.addAction(newAction)
         }
         self.present(weekdaySelectActionSheet, animated: true, completion: nil)
     }
+    
     func showEmptyNameAlert(){
         let nameAlertViewController = UIAlertController.init(title: "Empty Infomation", message: "Please enter text for plan name!", preferredStyle: UIAlertController.Style.alert)
         let action = UIAlertAction.init(title: "Cancel", style: UIAlertAction.Style.cancel) { (action:UIAlertAction) in
@@ -136,6 +174,14 @@ class AddPlan:UIViewController,UIPickerViewDelegate,UIPickerViewDataSource,UITex
     //状态栏设置
     override var preferredStatusBarStyle: UIStatusBarStyle {
         get{ return UIStatusBarStyle.lightContent }
+    }
+    @IBAction func unwindSegueFromSearchAction(_ segue:UIStoryboardSegue){
+        let sourceVC = segue.source as! SearchActionViewController
+        for item in sourceVC.didSelectedActions{
+            let specifeidAction = SpecifiedAction.init(action: item.value, group: 7, num: 15)
+            newPlan.actionsInPlan.append(specifeidAction)
+        }
+        actionTableView.reloadData()
     }
 }
 

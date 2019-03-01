@@ -11,11 +11,28 @@ import UIKit
 import CoreData
 class SearchActionViewController:UIViewController,UITableViewDelegate,UITableViewDataSource,UISearchBarDelegate{
     //组件
-    @IBAction func doneButton(_ sender: Any) {
-        
+    @IBOutlet weak var backAndDone: UIBarButtonItem!
+    @IBOutlet weak var selectAndCancel: UIBarButtonItem!
+    @IBAction func backAndDoneBtn(_ sender: UIBarButtonItem) {
+        if(actionTableView.isEditing == false){
+            self.dismiss(animated: true, completion: nil)
+        }else{
+            //processed in segue
+            performSegue(withIdentifier: "unwindFromSearchAction", sender: self)
+        }
     }
-    @IBAction func cancelButton(_ sender: Any) {
-        
+    @IBAction func SelectAndCancelBtn(_ sender: UIBarButtonItem) {
+        if(actionTableView.isEditing == false){
+            actionTableView.setEditing(true, animated: true)
+            actionTableView.allowsMultipleSelection = true
+            backAndDone.title = "Done"
+            selectAndCancel.title = "Cancel"
+        }else{
+            actionTableView.setEditing(false, animated: true)
+            actionTableView.allowsMultipleSelection = false
+            backAndDone.title = "Back"
+            selectAndCancel.title = "Select"
+        }
     }
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var actionTableView: UITableView!
@@ -25,15 +42,24 @@ class SearchActionViewController:UIViewController,UITableViewDelegate,UITableVie
     //变量
     var cachedActions:[Action] = []
     var searchedActions:[Action] = []
+    var didSelectedActions:[Int:Action] = [:]
     //
     override func viewDidLoad() {
         super.viewDidLoad()
         searchBar.delegate = self
         actionTableView.delegate = self
         actionTableView.dataSource = self
+        actionTableView.allowsSelection = false
+        actionTableView.allowsMultipleSelection = false
     }
     override func viewDidAppear(_ animated: Bool) {
         cacheAllActions()
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        actionTableView.setEditing(false, animated: true)
+        backAndDone.title = "Back"
+        selectAndCancel.title = "Select"
+        didSelectedActions.removeAll()
     }
     //cache all the stored actions
     func cacheAllActions(){
@@ -44,9 +70,11 @@ class SearchActionViewController:UIViewController,UITableViewDelegate,UITableVie
         let asyncFetch = NSAsynchronousFetchRequest.init(fetchRequest: fetch) { (result:NSAsynchronousFetchResult<Actions>) in
             self.cachedActions.removeAll()
             for item in result.finalResult!{
-                let newAction = Action.init(name: item.name!, note: item.note)
+                let newAction = Action.init(name: item.name!, note: item.note!)
+                newAction.objectIDinCoreData = item.objectID.isTemporaryID ? nil:item.objectID
                 self.cachedActions.append(newAction)
             }
+            self.searchedActions = self.cachedActions
             DispatchQueue.main.async {
                 self.actionTableView.reloadData()
             }
@@ -98,6 +126,16 @@ class SearchActionViewController:UIViewController,UITableViewDelegate,UITableVie
             queryCachedActions(keywords: searchBar.text!)
         }
         searchBar.resignFirstResponder()
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        didSelectedActions[indexPath.row] = searchedActions[indexPath.row]
+    }
+    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        didSelectedActions.removeValue(forKey: indexPath.row)
+    }
+    func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
+        let type = UITableViewCell.EditingStyle.insert.rawValue | UITableViewCell.EditingStyle.delete.rawValue
+        return UITableViewCell.EditingStyle.init(rawValue: type)!
     }
     //
 }

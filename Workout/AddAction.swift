@@ -20,7 +20,7 @@ class AddAction:UIViewController,UITextViewDelegate,UITextFieldDelegate{
     @IBOutlet weak var actionName: UITextField!
     @IBOutlet weak var actionNote: UITextView!
     //变量
-    var newAction:Action = Action.init(name: "", note: nil)
+    var newAction:Action = Action.init(name: "Default Name", note: "Default Note")
     override func viewDidLoad() {
         super.viewDidLoad()
         actionNote.delegate = self
@@ -29,8 +29,7 @@ class AddAction:UIViewController,UITextViewDelegate,UITextFieldDelegate{
     }
     //textView delegate
     func textViewDidEndEditing(_ textView: UITextView) {
-        let text = textView.text
-        newAction.note = text
+        newAction.note = textView.text
     }
     func textFieldDidEndEditing(_ textField: UITextField, reason: UITextField.DidEndEditingReason) {
         if(textField.text == ""){
@@ -44,27 +43,27 @@ class AddAction:UIViewController,UITextViewDelegate,UITextFieldDelegate{
     }
     func saveAction(action:Action){
         let savingAlert = UIAlertController.init(title: "Saving", message: nil, preferredStyle: UIAlertController.Style.alert)
-        let ctx = getPrivateQueueMOCtx()
-        let actionEntityDescription = NSEntityDescription.entity(forEntityName: "Actions", in: ctx)!
-        let actionMO = NSManagedObject.init(entity: actionEntityDescription, insertInto: ctx) as! Actions
-        actionMO.name = action.name
-        actionMO.note = action.note
-        ctx.performAndWait {
-            do{
-                try ctx.save()
-                self.present(savingAlert, animated: true, completion: nil)
-            }catch{
-                fatalError(error.localizedDescription)
+        let persistentCoordinator = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.persistentStoreCoordinator
+        DispatchQueue.global().async {
+            let ctx = NSManagedObjectContext.init(concurrencyType: NSManagedObjectContextConcurrencyType.privateQueueConcurrencyType)
+            ctx.persistentStoreCoordinator = persistentCoordinator
+            let actionEntityDescription = NSEntityDescription.entity(forEntityName: "Actions", in: ctx)!
+            let actionMO = NSManagedObject.init(entity: actionEntityDescription, insertInto: ctx) as! Actions
+            actionMO.name = action.name
+            actionMO.note = action.note
+            ctx.performAndWait {
+                do{
+                    DispatchQueue.main.async {
+                        self.present(savingAlert, animated: true, completion: nil)
+                    }
+                    try ctx.save()
+                    DispatchQueue.main.async {
+                        savingAlert.dismiss(animated: true, completion: {()->Void in
+                            self.dismiss(animated: true, completion: nil)
+                        })
+                    }
+                }catch{fatalError(error.localizedDescription)}
             }
-            savingAlert.dismiss(animated: true, completion: {()->Void in
-                self.dismiss(animated: true, completion: nil)
-            })
         }
-    }
-    @IBAction func backToActionLib(segue:UIStoryboardSegue){
-        print("back")
-    }
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
     }
 }

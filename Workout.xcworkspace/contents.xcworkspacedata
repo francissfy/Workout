@@ -2,6 +2,12 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:SpecifiedActions+CoreDataClass.swift">
+   </FileRef>
+   <FileRef
+      location = "group:SpecifiedActions+CoreDataProperties.swift">
+   </FileRef>
+   <FileRef
       location = "group:PlanArch+CoreDataClass.swift">
    </FileRef>
    <FileRef
