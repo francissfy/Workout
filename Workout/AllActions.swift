@@ -49,7 +49,10 @@ class AllActions: UIViewController,UITableViewDelegate,UITableViewDataSource {
     override func viewDidAppear(_ animated: Bool) {
         refreshingData()
     }
-    
+    //
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        get{ return UIStatusBarStyle.lightContent }
+    }
     //delegate and datasource
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return allAction.count

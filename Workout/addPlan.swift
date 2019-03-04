@@ -19,6 +19,7 @@ class AddPlan:UIViewController,UIPickerViewDelegate,UIPickerViewDataSource,UITex
     }
     @IBAction func done(_ sender: Any) {
         savingPlan(toSave: newPlan)
+        self.dismiss(animated: true, completion: nil)
     }
     
     

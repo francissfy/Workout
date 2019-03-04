@@ -6,51 +6,29 @@
 //  Copyright © 2019年 francis. All rights reserved.
 //
 
+
+//@Deprecated this file is no longer useful
 import Foundation
 import UIKit
 class OnGoing:UIViewController{
-    //
-    @IBAction func backBtn(_ sender: Any) {
-        UIView.animate(withDuration: TimeInterval.init(exactly: 1)!) {
-            self.bottomView.transform = self.bottomView.transform.translatedBy(x: CGFloat(0), y: CGFloat(-215))
+    @IBAction func preBtn(_ sender: Any) {
+        UIView.animate(withDuration: TimeInterval(0.4)) {
+            self.yellow.transform = self.yellow.transform.translatedBy(x: 375, y: 0)
+            self.red.transform = self.red.transform.translatedBy(x: 375, y: 0)
         }
-        
-        print(bottomView.frame.origin)
     }
-    @IBAction func actionBtn(_ sender: Any) {
-        UIView.animate(withDuration: TimeInterval.init(exactly: 1)!) {
-            self.bottomView.transform = self.bottomView.transform.translatedBy(x: CGFloat(0), y: CGFloat(215))
+    @IBAction func nextBtn(_ sender: Any) {
+        UIView.animate(withDuration: TimeInterval(0.4)) {
+            self.yellow.transform = self.yellow.transform.translatedBy(x: -375, y: 0)
+            self.red.transform = self.red.transform.translatedBy(x: -375, y: 0)
         }
-        print(bottomView.frame.origin)
     }
-    @IBOutlet weak var bottomView: UIView!
-    //
-    var bottomSheetViewController:BottomSheetViewController? = nil
+    @IBOutlet weak var yellow: UIImageView!
+    @IBOutlet weak var red: UIImageView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let wipeGesrecog = UIPanGestureRecognizer.init(target: self, action: #selector(handleGes))
-        self.view.addGestureRecognizer(wipeGesrecog)
-    }
-    @IBAction func handleGes(_ sender: UIGestureRecognizer){
-        print(sender.numberOfTouches)
-        print(sender.location(in: bottomView))
-    }
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        print(segue.destination)
-        bottomSheetViewController = (segue.destination as! BottomSheetViewController)
+        red.transform = red.transform.translatedBy(x: 375, y: 0)
     }
     
-    
-    @IBAction func panGesBottomSheetSlide(_ sender:UIGestureRecognizer){
-        let currentSheetOrigin = bottomView.frame.origin
-        let windowFrame = self.view.frame
-        
-        
-        
-        
-        
-        
-        
-    }
 }

@@ -48,14 +48,6 @@ class workoutCalendarViewController: UIViewController,UITableViewDelegate,UITabl
         sectionHeader.sectionhHeader.text = "\(date.year)年\(date.month)月"
         return sectionHeader as UICollectionReusableView
     }
-    //预加载@considering
-    /*
-    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        //加载下一个月
-        if(indexPath.section>monthSet.count-3){addMonthSection();print(monthSet.count);workoutCalendarView.reloadData()}
-    }
-    */
-    //
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return monthSet.count
     }

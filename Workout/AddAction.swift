@@ -29,7 +29,8 @@ class AddAction:UIViewController,UITextViewDelegate,UITextFieldDelegate{
     }
     //textView delegate
     func textViewDidEndEditing(_ textView: UITextView) {
-        newAction.note = textView.text
+        print(textView.text!)
+        newAction.note = textView.text!
     }
     func textFieldDidEndEditing(_ textField: UITextField, reason: UITextField.DidEndEditingReason) {
         if(textField.text == ""){
