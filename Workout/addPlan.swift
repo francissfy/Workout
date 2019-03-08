@@ -18,10 +18,10 @@ class AddPlan:UIViewController,UIPickerViewDelegate,UIPickerViewDataSource,UITex
         self.dismiss(animated: true, completion: nil)
     }
     @IBAction func done(_ sender: Any) {
-        savingPlan(toSave: newPlan)
-        self.dismiss(animated: true, completion: nil)
+        if(newPlan.objectIDinCoreData != nil){
+            savingPlanWithID(toSave: newPlan)
+        }else{savingPlan(toSave: newPlan)}
     }
-    
     
     
     @IBAction func editActionTable(_ sender: UIButton) {
@@ -48,9 +48,11 @@ class AddPlan:UIViewController,UIPickerViewDelegate,UIPickerViewDataSource,UITex
         groupNumPicker.selectRow(6, inComponent: 0, animated: false)
         groupNumPicker.selectRow(14, inComponent: 1, animated: false)
         planName.delegate = self
+        planName.text = newPlan.title
         actionTableView.dataSource = self
         actionTableView.delegate = self
         weekdayLabel.isUserInteractionEnabled = true
+        weekdayLabel.text = newPlan.weekday.fullString
         let gesRecog = UITapGestureRecognizer.init(target: self, action: #selector(showWeekdayActionSheet))
         weekdayLabel.addGestureRecognizer(gesRecog)
     }
@@ -58,6 +60,38 @@ class AddPlan:UIViewController,UIPickerViewDelegate,UIPickerViewDataSource,UITex
         
     }
     //saving plan
+    func savingPlanWithID(toSave:Plan){
+        let fetchingSavingAlert = UIAlertController.init(title: "Saving Plan", message: nil, preferredStyle: UIAlertController.Style.alert)
+        if(toSave.objectIDinCoreData != nil){
+            DispatchQueue.main.async {
+                self.present(fetchingSavingAlert, animated: true, completion: nil)
+            }
+            let coordinator = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.persistentStoreCoordinator
+            DispatchQueue.global().async {
+                let ctx = NSManagedObjectContext.init(concurrencyType: NSManagedObjectContextConcurrencyType.privateQueueConcurrencyType)
+                ctx.persistentStoreCoordinator = coordinator
+                let NSMO = (ctx.object(with: toSave.objectIDinCoreData!) as! Plans)
+                NSMO.name = toSave.title
+                NSMO.weekday = Int64(toSave.weekday.rawValue)
+                NSMO.specifiedaction = NSSet()
+                let specificActionEntitydDes = NSEntityDescription.entity(forEntityName: "SpecifiedActions", in: ctx)!
+                for specAction in toSave.actionsInPlan{
+                    let NSMSpecAction = (NSManagedObject.init(entity: specificActionEntitydDes, insertInto: ctx) as! SpecifiedActions)
+                    NSMSpecAction.action = (ctx.object(with: specAction.action.objectIDinCoreData!) as! Actions)
+                    NSMSpecAction.group = Int64(specAction.group)
+                    NSMSpecAction.num = Int64(specAction.num)
+                    NSMO.addToSpecifiedaction(NSMSpecAction)
+                }
+                // MARK: left for saving arch infomation
+                do{try ctx.save()}catch{fatalError(error.localizedDescription)}
+                DispatchQueue.main.async {
+                    fetchingSavingAlert.dismiss(animated: true, completion: {()->Void in
+                        self.dismiss(animated: true, completion: nil)
+                    })
+                }
+            }
+        }
+    }
     func savingPlan(toSave:Plan){
         let fetchingSavingAlert = UIAlertController.init(title: "Saving Plan", message: nil, preferredStyle: UIAlertController.Style.alert)
         let coordinator = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.persistentStoreCoordinator
@@ -83,7 +117,9 @@ class AddPlan:UIViewController,UIPickerViewDelegate,UIPickerViewDataSource,UITex
             newMPlan.weekday = Int64(self.newPlan.weekday.rawValue)
             do{try ctx.save()}catch{fatalError(error.localizedDescription)}
             DispatchQueue.main.async {
-                fetchingSavingAlert.dismiss(animated: true, completion: nil)
+                fetchingSavingAlert.dismiss(animated: true, completion: {()->Void in
+                    self.dismiss(animated: true, completion: nil)
+                })
             }
         }
     }

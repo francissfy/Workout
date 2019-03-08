@@ -72,6 +72,7 @@ class SearchActionViewController:UIViewController,UITableViewDelegate,UITableVie
             for item in result.finalResult!{
                 let newAction = Action.init(name: item.name!, note: item.note!)
                 newAction.objectIDinCoreData = item.objectID.isTemporaryID ? nil:item.objectID
+                print("is the action has temperary id? \(item.objectID.isTemporaryID)")
                 self.cachedActions.append(newAction)
             }
             self.searchedActions = self.cachedActions

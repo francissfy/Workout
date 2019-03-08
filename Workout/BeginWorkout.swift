@@ -21,29 +21,45 @@ class BeginWorkour: UIViewController, UITableViewDelegate,UITableViewDataSource 
     @IBAction func planEdit(_ sender: UIBarButtonItem) {
         if(sender.title == "Edit"){
             //implement edit action
-        }else{
+            planTableView.setEditing(true, animated: true)
+            sender.title = "Done"
+        }else if(sender.title == "Done"){
+            planTableView.setEditing(false, animated: true)
+            sender.title = "Edit"
+        }else if(sender.title == "Back"){
             moveBackToPlan()
         }
     }
     @IBAction func addPlan(_ sender: UIBarButtonItem) {
         if(sender.title == "Add"){
             //implement add plan action
-            performSegue(withIdentifier: "addPlan", sender: nil)
-        }else{
+            performSegue(withIdentifier: "toPlan", sender: nil)
+        }else if(sender.title == "Start"){
             //implement stop or start action
+            sender.title = "End"
+            bottomSheetViewController!.start(actionToStart: 0)
+            bottomSheetViewController!.finish = {()->Void in
+                self.addAchieve(toPlan: self.toAddAchPlan!)
+                self.toAddAchPlan = nil
+                self.fetchAllPlans()
+            }
+        }else if(sender.title == "End"){
+            bottomSheetViewController!.endTraining()
+            sender.title = "Start"
         }
     }
     @IBOutlet weak var tabbar: UITabBarItem!
     @IBOutlet weak var bottomView: UIView!
     //变量
     var bottomSheetViewController:BottomSheetViewController? = nil
-    let transactionTime = TimeInterval.init(0.4)
-    let today = Date.init()
-    let formatter = DateFormatter.init()
+    let transactionTime = TimeInterval.init(0.3)
     let todayWeekday = Calendar.current.component(Calendar.Component.weekday, from: Date.init())
     var fetchedPlans:[Plan] = []
     var planActionController = planActionTableViewController()
     var screenWidth = CGFloat(375)
+    var segueArgToPlan:Plan? = nil//fro editting
+    var toAddAchPlan:Plan? = nil//for saving achieve
+    //
     override func viewDidLoad() {
         super.viewDidLoad()
         //tableView代理
@@ -51,8 +67,6 @@ class BeginWorkour: UIViewController, UITableViewDelegate,UITableViewDataSource 
         planTableView.dataSource = self
         planActionDetail.dataSource = planActionController
         planActionDetail.delegate = planActionController
-        //
-        formatter.dateFormat = "dd"
         //
         screenWidth = self.view.frame.width
         planActionDetail.transform = planActionDetail.transform.translatedBy(x: screenWidth, y: 0)
@@ -71,34 +85,45 @@ class BeginWorkour: UIViewController, UITableViewDelegate,UITableViewDataSource 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return fetchedPlans.count
     }
-    func getDateWithWeekday(today:Date,weekday:Weekday)->String{
-        let cal = Calendar.current
-        let todayWeekday = cal.component(Calendar.Component.weekday, from: today)
-        let expectDate = cal.date(byAdding: Calendar.Component.day, value: weekday.rawValue-todayWeekday, to: today)!
-        let formatter = DateFormatter.init()
-        formatter.dateFormat = "dd"
-        return formatter.string(from: expectDate)
-    }
+//    func getDateWithWeekday(today:Date,weekday:Weekday)->String{
+//        let cal = Calendar.current
+//        let todayWeekday = cal.component(Calendar.Component.weekday, from: today)
+//        let expectDate = cal.date(byAdding: Calendar.Component.day, value: weekday.rawValue-todayWeekday, to: today)!
+//        let formatter = DateFormatter.init()
+//        formatter.dateFormat = "dd"
+//        return formatter.string(from: expectDate)
+//    }
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "plan") as! planViewCell
         let plan = fetchedPlans[indexPath.row]
-        cell.planArch.text = "\(plan.archievs.count) Arch."
+        cell.planArch.text = "\(plan.archievs.count)"
         cell.planTitle.text = plan.title
         cell.planWeekday.text = plan.weekday.short
         cell.planFreq.text = "\(plan.actionsInPlan.count) Actions"
-        //
-        let expectDate = Calendar.current.date(byAdding: Calendar.Component.day, value: plan.weekday.rawValue-todayWeekday, to: today)!
-        cell.planDate.text = formatter.string(from: expectDate)
         return cell
     }
+    func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        segueArgToPlan = fetchedPlans[indexPath.row]
+        performSegue(withIdentifier: "toPlan", sender: nil)
+    }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        toAddAchPlan = fetchedPlans[indexPath.row]
         moveToPlanActionDetail(selectedPlanRow: indexPath)
+        bottomSheetViewController!.actionSeq = fetchedPlans[indexPath.row].actionsInPlan
+    }
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if(editingStyle == UITableViewCell.EditingStyle.delete){
+            deletePlan(toDelete: fetchedPlans[indexPath.row])
+            fetchedPlans.remove(at: indexPath.row)
+            tableView.reloadData()
+        }
     }
     //
     func moveToPlanActionDetail(selectedPlanRow:IndexPath){
         navEdit.title = "Back"
         navTitle.title = "Actions"
-        navAdd.title = "Stop"
+        navAdd.title = "Start"
         planActionController.actions = fetchedPlans[selectedPlanRow.row].actionsInPlan
         planActionDetail.reloadData()
         UIView.animate(withDuration: TimeInterval(0.4)) {
@@ -120,7 +145,7 @@ class BeginWorkour: UIViewController, UITableViewDelegate,UITableViewDataSource 
         get{ return UIStatusBarStyle.lightContent }
     }
     //
-    func fetchAllPlans(){
+    func fetchAllPlans(){//items or sub items in fetchedAllPlans are given objectID
         let coordinator = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.persistentStoreCoordinator
         DispatchQueue.global().async {
             let ctx = NSManagedObjectContext.init(concurrencyType: NSManagedObjectContextConcurrencyType.privateQueueConcurrencyType)
@@ -133,10 +158,20 @@ class BeginWorkour: UIViewController, UITableViewDelegate,UITableViewDataSource 
                 self.fetchedPlans.removeAll()
                 for plan in allPlans{
                     let newPlan = Plan.init(title: plan.name!, weekday: convertToWeekday(wd: Int(plan.weekday)))
+                    newPlan.objectIDinCoreData = plan.objectID
+                    //getting achieve
+                    for achieve in plan.arch!{
+                        let achDate = achieve as! PlanArch
+                        newPlan.archievs.append(achDate.archDate!)
+                    }
+                    //getting specific actions
                     for i in plan.specifiedaction!{
                         let specAction = i as! SpecifiedActions
+                        //getting actions
                         let action = Action.init(name: specAction.action!.name!, note: specAction.action!.note!)
+                        action.objectIDinCoreData = specAction.action!.objectID
                         let newSpecAction = SpecifiedAction.init(action: action, group: Int(specAction.group), num: Int(specAction.num))
+                        newSpecAction.objectIDinCoreData = specAction.objectID
                         newPlan.actionsInPlan.append(newSpecAction)
                     }
                     self.fetchedPlans.append(newPlan)
@@ -148,10 +183,38 @@ class BeginWorkour: UIViewController, UITableViewDelegate,UITableViewDataSource 
             do{try ctx.execute(asyncFetch)}catch{fatalError(error.localizedDescription)}
         }
     }
+    func deletePlan(toDelete:Plan){
+        let coordinator = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.persistentStoreCoordinator
+        DispatchQueue.global().async {
+            let ctx = NSManagedObjectContext.init(concurrencyType: NSManagedObjectContextConcurrencyType.privateQueueConcurrencyType)
+            ctx.persistentStoreCoordinator = coordinator
+            ctx.delete(ctx.object(with: toDelete.objectIDinCoreData!))
+            do{try ctx.save()}catch{fatalError(error.localizedDescription)}
+        }
+    }
+    func addAchieve(toPlan:Plan){
+        let coordinator = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.persistentStoreCoordinator
+        DispatchQueue.global().async {
+            let ctx = NSManagedObjectContext.init(concurrencyType: NSManagedObjectContextConcurrencyType.privateQueueConcurrencyType)
+            ctx.persistentStoreCoordinator = coordinator
+            let NSManagedPlan = ctx.object(with: toPlan.objectIDinCoreData!) as! Plans
+            let achieveEntityDes = NSEntityDescription.entity(forEntityName: "PlanArch", in: ctx)!
+            let newAch = (NSManagedObject.init(entity: achieveEntityDes, insertInto: ctx) as! PlanArch)
+            newAch.archDate = Date.init()
+            NSManagedPlan.addToArch(newAch)
+            do{try ctx.save()}catch{fatalError(error.localizedDescription)}
+        }
+    }
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         print(segue.destination)
         if(segue.identifier != nil && segue.identifier! == "BottomSheetSegue"){
             bottomSheetViewController = (segue.destination as! BottomSheetViewController)
+        }
+        if(segue.identifier != nil && segue.identifier == "toPlan"){
+            if(segueArgToPlan != nil){
+                (segue.destination as! AddPlan).newPlan = segueArgToPlan!
+                segueArgToPlan = nil
+            }
         }
     }
     @objc func unFoldWidget(){
@@ -173,7 +236,6 @@ class BeginWorkour: UIViewController, UITableViewDelegate,UITableViewDataSource 
     //
 }
 class planViewCell:UITableViewCell{
-    @IBOutlet weak var planDate: UILabel!
     @IBOutlet weak var planWeekday: UILabel!
     @IBOutlet weak var planTitle: UILabel!
     @IBOutlet weak var planFreq: UILabel!
